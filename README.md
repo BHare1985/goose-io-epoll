@@ -7,7 +7,7 @@ on them. It is the generic layer of tcprouter's engine with the proxy removed an
 This is an example event loop: read it to see what a conforming loop is. [goose-io-epoll-ext](https://github.com/BHare1985/goose-io-epoll-ext) is this loop with
 the extra functionality a performant TCP proxy needs.
 
-Self-contained: it fetches goose-io v0.2 (`import goose_io from "github.com/BHare1985/goose-io@v0.2"`) with `goose fetch`. Needs Goose v2026.4,
+Self-contained: it fetches goose-io v0.3 (`import goose_io from "github.com/BHare1985/goose-io@v0.3"`) with `goose fetch`. Needs Goose v2026.4,
 a C compiler, Python 3 for the network tests.
 
 ```bash
