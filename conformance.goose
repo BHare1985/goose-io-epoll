@@ -1,8 +1,8 @@
 // Runs one part of the conformance suite against the epoll event loop, on real sockets:
 //
-//     goose build conformance.goose -o conformance && ./conformance <part> <group>
+//     goose build conformance.goose -o conformance && ./conformance <part> <capability>
 //
-// The part is the first argument (default 0) and the group the second (core, half-close, sizing, abort, inspection or batching;
+// The part is the first argument (default 0) and the capability the second (core, half-close, sizing, abort, inspection or batching;
 // default core). Both ends of every link are on the loop under test, so the runner supplies what a contract call cannot make
 // (docs/event-loops.md, the fixture), without privileges, on the loopback:
 //
@@ -13,7 +13,7 @@
 //   answers  a listener the kernel keeps completing connects for, so a dial made while the loop is draining still opens
 import std;
 import os;
-import goose_io from "github.com/BHare1985/goose-io@v0.3";
+import goose_io from "github.com/BHare1985/goose-io@v0.4";
 import goose_io.conformance.suite;
 import epoll from ".";
 
@@ -50,8 +50,8 @@ fn main() {
         arg(1, text);
         for c in text { if c >= '0' && c <= '9' { part = part * 10 + (c - '0'); } }
     }
-    var group: u8[>..] = [];
-    if arg_count() > 2 { arg(2, group); }
+    var capability: u8[>..] = [];
+    if arg_count() > 2 { arg(2, capability); }
 
     // All four address texts live in one array: the suite is only allowed to call a loop that shrinks its own arrays when the views
     // it holds are of one array exactly (the language's aliasing rule), so the fixture is four slices of one.
@@ -82,10 +82,10 @@ fn main() {
     goose_io::require_abort(io);
     goose_io::require_inspection(io);
     let fixture = goose_io_conformance::Fixture { silent: texts[..silent_end], held: texts[silent_end..held_end], refused: texts[answers_end..], answers: texts[held_end..answers_end], unix: "" };
-    if group == "half-close" { exit(goose_io_conformance::conformance_half_close_part(io, fixture, part)); }
-    if group == "sizing" { exit(goose_io_conformance::conformance_sizing_part(io, fixture, part)); }
-    if group == "abort" { exit(goose_io_conformance::conformance_abort_part(io, fixture, part)); }
-    if group == "inspection" { exit(goose_io_conformance::conformance_inspection_part(io, fixture, part)); }
-    if group == "batching" { exit(goose_io_conformance::conformance_batching_part(io, fixture, part)); }
+    if capability == "half-close" { exit(goose_io_conformance::conformance_half_close_part(io, fixture, part)); }
+    if capability == "sizing" { exit(goose_io_conformance::conformance_sizing_part(io, fixture, part)); }
+    if capability == "abort" { exit(goose_io_conformance::conformance_abort_part(io, fixture, part)); }
+    if capability == "inspection" { exit(goose_io_conformance::conformance_inspection_part(io, fixture, part)); }
+    if capability == "batching" { exit(goose_io_conformance::conformance_batching_part(io, fixture, part)); }
     exit(goose_io_conformance::conformance_core_part(io, fixture, part));
 }

@@ -1,5 +1,5 @@
 // The epoll event loop: one `Loop` is one thread's event loop on real sockets, and supplies the whole contract
-// (the core and the half-close, sizing, abort, inspection and batching groups; not the unix group).
+// (the core and the half-close, sizing, abort, inspection and batching capabilities, declared near the end of this file; not unix, relay, peek, revoke, wake or limits).
 //
 // It is tcprouter's engine (its generic layer: the worker loop, slots and generations, buffer pool, bounded send
 // queue, dial, timeouts, drain, statistics) with the proxy removed (routes, SNI inspection, forwarding, retry, policy,
@@ -903,6 +903,13 @@ fn stop(io: Loop&, grace_ms: i64) {
 }
 
 fn draining(io: Loop&) -> bool { io._draining || io._finished }
+
+// The capabilities this loop supplies (contract 0.4): the five below. It does not supply unix, relay, peek, revoke, wake or limits.
+fn supplies_half_close(io: Loop&) -> goose_io::Supplied { return goose_io::Supplied {}; }
+fn supplies_sizing(io: Loop&) -> goose_io::Supplied { return goose_io::Supplied {}; }
+fn supplies_abort(io: Loop&) -> goose_io::Supplied { return goose_io::Supplied {}; }
+fn supplies_inspection(io: Loop&) -> goose_io::Supplied { return goose_io::Supplied {}; }
+fn supplies_batching(io: Loop&) -> goose_io::Supplied { return goose_io::Supplied {}; }
 
 // A snapshot of this loop's counters. Call it on the loop's thread, e.g. from a Tick.
 fn stats(io: Loop&) -> Stats {
