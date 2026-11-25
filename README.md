@@ -1,13 +1,13 @@
 # goose-io-epoll
 
 The epoll event loop for [goose-io](https://github.com/BHare1985/goose-io), on real sockets, Linux only. One `epoll::Loop` is one thread's event loop. It supplies the
-goose-io contract's core and the half-close, sizing, abort, inspection and batching capabilities (not unix, relay, peek, revoke, wake or limits), and passes the conformance suite
+goose-io contract's core and the half-close, sizing, abort, inspection, batching and shared-listen capabilities (not unix, relay, peek, revoke, wake or limits), and passes the conformance suite
 on them. It is the generic layer of tcprouter's engine with the proxy removed and the contract's names in place.
 
 This is an example event loop: read it to see what a conforming loop is. [goose-io-epoll-ext](https://github.com/BHare1985/goose-io-epoll-ext) is this loop with
 the extra functionality a performant TCP proxy needs.
 
-Self-contained: it fetches goose-io v0.4 (`import goose_io from "github.com/BHare1985/goose-io@v0.4"`) with `goose fetch`. Needs Goose v2026.4,
+Self-contained: it fetches goose-io (contract 0.5, branch apply-name-resolution until it is tagged) (`import goose_io from "github.com/BHare1985/goose-io@apply-name-resolution"`) with `goose fetch`. Needs Goose v2026.4,
 a C compiler, Python 3 for the network tests.
 
 ```bash

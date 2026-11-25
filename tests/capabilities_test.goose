@@ -1,7 +1,7 @@
-// Checks which capabilities the epoll loop declares (contract 0.4): exactly half_close, sizing, abort, inspection and batching.
+// Checks which capabilities the epoll loop declares (contract 0.5): exactly half_close, sizing, abort, inspection and batching.
 // Build and run:  ./build.sh tests/capabilities_test.goose /tmp/capabilities_test && /tmp/capabilities_test
 import std;
-import goose_io from "github.com/BHare1985/goose-io@v0.4";
+import goose_io from "github.com/BHare1985/goose-io@apply-name-resolution";
 import epoll from "..";
 
 fn supplied<S>(s: S) -> bool {
@@ -10,17 +10,19 @@ fn supplied<S>(s: S) -> bool {
 
 fn main() {
     var io = epoll::Loop { .. };
-    assert(goose_io::VERSION_MAJOR == 0 && goose_io::VERSION_MINOR == 4);
+    assert(goose_io::VERSION_MAJOR == 0 && goose_io::VERSION_MINOR == 5);
     assert(supplied(goose_io::has_half_close(io)));
     assert(supplied(goose_io::has_sizing(io)));
     assert(supplied(goose_io::has_abort(io)));
     assert(supplied(goose_io::has_inspection(io)));
     assert(supplied(goose_io::has_batching(io)));
+    assert(supplied(goose_io::has_shared_listen(io)));
     assert(!supplied(goose_io::has_unix(io)));
+    assert(!supplied(goose_io::has_name_resolution(io)));
     assert(!supplied(goose_io::has_relay(io)));
     assert(!supplied(goose_io::has_peek(io)));
     assert(!supplied(goose_io::has_revoke(io)));
     assert(!supplied(goose_io::has_wake(io)));
     assert(!supplied(goose_io::has_limits(io)));
-    print("capabilities: 5 supplied, 6 absent");
+    print("capabilities: 6 supplied, 7 absent");
 }

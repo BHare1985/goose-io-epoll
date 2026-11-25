@@ -13,7 +13,7 @@
 //   answers  a listener the kernel keeps completing connects for, so a dial made while the loop is draining still opens
 import std;
 import os;
-import goose_io from "github.com/BHare1985/goose-io@v0.4";
+import goose_io from "github.com/BHare1985/goose-io@apply-name-resolution";
 import goose_io.conformance.suite;
 import epoll from ".";
 
@@ -81,11 +81,13 @@ fn main() {
     goose_io::require_sizing(io);
     goose_io::require_abort(io);
     goose_io::require_inspection(io);
+    goose_io::require_shared_listen(io);
     let fixture = goose_io_conformance::Fixture { silent: texts[..silent_end], held: texts[silent_end..held_end], refused: texts[answers_end..], answers: texts[held_end..answers_end], unix: "" };
     if capability == "half-close" { exit(goose_io_conformance::conformance_half_close_part(io, fixture, part)); }
     if capability == "sizing" { exit(goose_io_conformance::conformance_sizing_part(io, fixture, part)); }
     if capability == "abort" { exit(goose_io_conformance::conformance_abort_part(io, fixture, part)); }
     if capability == "inspection" { exit(goose_io_conformance::conformance_inspection_part(io, fixture, part)); }
+    if capability == "shared-listen" { exit(goose_io_conformance::conformance_shared_listen_part(io, fixture, part)); }
     if capability == "batching" { exit(goose_io_conformance::conformance_batching_part(io, fixture, part)); }
     exit(goose_io_conformance::conformance_core_part(io, fixture, part));
 }

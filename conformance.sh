@@ -5,7 +5,7 @@
 # A part that fails in any repetition fails the run. Unlike the in-memory event loop the real one is not deterministic, so the
 # output of repetitions is not compared: a failure in any of them is a failure.
 set -u
-here="$(cd "$(dirname "$0")" && pwd)"; goose_io="${GOOSE_IO:-${GOOSE_HOME:-$HOME/.goose}/pkg/github.com/BHare1985/goose-io/v0.4}"; cd "$here"
+here="$(cd "$(dirname "$0")" && pwd)"; goose_io="${GOOSE_IO:-${GOOSE_HOME:-$HOME/.goose}/pkg/github.com/BHare1985/goose-io/apply-name-resolution}"; cd "$here"
 repeat=1; only=
 while [ $# -gt 0 ]; do
     case "$1" in
@@ -18,7 +18,7 @@ done
 tmp=$(mktemp -d "${TMPDIR:-/tmp}/epoll-conformance.XXXXXX"); trap 'rm -rf "$tmp"' EXIT
 ./build.sh conformance.goose "$tmp/conformance" >"$tmp/build.log" 2>&1 || { cat "$tmp/build.log"; echo "BUILD FAILED"; exit 1; }
 tsv="$goose_io/tests/conformance/checks.tsv"
-capabilities=$(grep -v '^#' "$tsv" | cut -f6 | sort -u | grep -vxE 'unix|relay|peek|revoke|wake|limits')
+capabilities=$(grep -v '^#' "$tsv" | cut -f6 | sort -u | grep -vxE 'unix|relay|peek|revoke|wake|limits|name-resolution')
 [ -n "$only" ] && capabilities="$only"
 failed=0; total=0
 for g in $capabilities; do

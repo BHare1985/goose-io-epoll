@@ -1,5 +1,5 @@
 // The epoll event loop: one `Loop` is one thread's event loop on real sockets, and supplies the whole contract
-// (the core and the half-close, sizing, abort, inspection and batching capabilities, declared near the end of this file; not unix, relay, peek, revoke, wake or limits).
+// (the core and the half-close, sizing, abort, inspection, batching and shared-listen capabilities, declared near the end of this file; not unix, relay, peek, revoke, wake or limits).
 //
 // It is tcprouter's engine (its generic layer: the worker loop, slots and generations, buffer pool, bounded send
 // queue, dial, timeouts, drain, statistics) with the proxy removed (routes, SNI inspection, forwarding, retry, policy,
@@ -431,14 +431,21 @@ fn _release(io: Loop&, i: i64) {
 
 // --- listening and accepting ---------------------------------------------------------------------
 
-fn listen(io: Loop&, address: const u8[:]) -> goose_io::Listener, goose_io::ListenError {
+// Plain listen: the port is this loop's alone (a second listener on it, plain or shared, is AddressInUse).
+fn listen(io: Loop&, address: const u8[:]) -> goose_io::Listener, goose_io::ListenError { return io._listen(address, false); }
+
+// Shared listen (the shared-listen capability): SO_REUSEPORT, so several loops (one per core) each hold the address and the
+// kernel hands every connection to exactly one of them. A shared listener on a path is BadAddress.
+fn listen_shared(io: Loop&, address: const u8[:]) -> goose_io::Listener, goose_io::ListenError { return io._listen(address, true); }
+
+fn _listen(io: Loop&, address: const u8[:], shared: bool) -> goose_io::Listener, goose_io::ListenError {
     let none = goose_io::Listener { .. };
     if io._finished || io._draining { return none, goose_io::ListenError { kind: goose_io::ListenErrorKind.Other, code: 108 }; }
     var p = _ParsedAddress { false, [0; 16], 0 };
     if !_parse_address(address, p, true) { return none, goose_io::ListenError { kind: goose_io::ListenErrorKind.BadAddress, code: 22 }; }
     if !io._ensure() { return none, goose_io::ListenError { kind: goose_io::ListenErrorKind.NoResources, code: 24 }; }
     if io._listeners.len >= 0xfffffffe { return none, goose_io::ListenError { kind: goose_io::ListenErrorKind.NoResources, code: 24 }; }
-    let fd = c_listen(p.v6, p.ip, p.port, true, 1024);
+    let fd = c_listen(p.v6, p.ip, p.port, shared, 1024);
     if fd < 0 { return none, goose_io::ListenError { kind: _listen_kind(-fd), code: -fd }; }
     let index = io._listeners.len;
     if c_epoll_ctl(io._epoll_fd, c_EPOLL_CTL_ADD, fd, c_EPOLLIN, _pack_event_data(_EVENT_KIND_LISTENER, index, 0)) < 0 {
@@ -904,12 +911,13 @@ fn stop(io: Loop&, grace_ms: i64) {
 
 fn draining(io: Loop&) -> bool { io._draining || io._finished }
 
-// The capabilities this loop supplies (contract 0.4): the five below. It does not supply unix, relay, peek, revoke, wake or limits.
+// The capabilities this loop supplies (contract 0.5): the six below. It does not supply unix, relay, peek, revoke, wake or limits.
 fn supplies_half_close(io: Loop&) -> goose_io::Supplied { return goose_io::Supplied {}; }
 fn supplies_sizing(io: Loop&) -> goose_io::Supplied { return goose_io::Supplied {}; }
 fn supplies_abort(io: Loop&) -> goose_io::Supplied { return goose_io::Supplied {}; }
 fn supplies_inspection(io: Loop&) -> goose_io::Supplied { return goose_io::Supplied {}; }
 fn supplies_batching(io: Loop&) -> goose_io::Supplied { return goose_io::Supplied {}; }
+fn supplies_shared_listen(io: Loop&) -> goose_io::Supplied { return goose_io::Supplied {}; }
 
 // A snapshot of this loop's counters. Call it on the loop's thread, e.g. from a Tick.
 fn stats(io: Loop&) -> Stats {
